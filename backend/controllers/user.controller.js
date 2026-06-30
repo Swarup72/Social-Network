@@ -85,7 +85,7 @@ export const login = async(req,res)=>{
         })
 
         if(!user){
-            res.status(404).json({message:"user does not exist"})
+           return res.status(404).json({message:"user does not exist"})
         }
 
         const isMatch = await bcrypt.compare(password,user.password)
@@ -101,7 +101,7 @@ export const login = async(req,res)=>{
         return res.json({ token:token })
         
     }catch(err){
-        res.status(500).json({message:err.message})
+       return res.status(500).json({message:err.message})
     }
 }
 
