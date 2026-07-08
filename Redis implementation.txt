@@ -1,0 +1,5 @@
+Redis implementation
+
+1. in Backend: npm i redis
+
+2. redis.js -> cache.js -> cachevalidation.js -> then used in api's like getUserAndProfile, updateProfileData, getAllUserProfile, userSendConnectionReq, getMyConnectionRequest, whatAreMyConnections, acceptConnection, 

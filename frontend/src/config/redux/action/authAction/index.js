@@ -13,14 +13,16 @@ export const loginUser = createAsyncThunk(
             if(response.data.token){
                  localStorage.setItem("token",response.data.token)
             }else{
-                return thunkAPI.rejectWithValue("token not provided")
+                return thunkAPI.rejectWithValue({
+                    message:"token not provided"
+                })
             }
 
             return thunkAPI.fulfillWithValue(response.data.token)
            
 
         }catch(err){
-            return thunkAPI.rejectWithValue( err.response?.data?.message || "Login Failed")
+            return thunkAPI.rejectWithValue(err.response.data)
         }
     }
 )

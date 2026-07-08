@@ -5,6 +5,13 @@ import crypto from "crypto"
 import PDFDocument from 'pdfkit'
 import fs from 'fs'
 import connection from '../models/connections.model.js'
+import { CACHE_KEYS, getCached, setCached } from '../utils/cache.js'
+import {
+    invalidateAllUsers,
+    invalidateConnectionCaches,
+    invalidateConnectionCachesByUserIds,
+    invalidateUserProfile
+} from '../utils/cacheInvalidation.js'
 
 const convertUserDataToPDF = async(userData)=>{
     const doc = new PDFDocument
@@ -65,6 +72,8 @@ export const register = async (req,res)=>{
 
         await profile.save()
 
+        await invalidateAllUsers()
+
         return res.json({message:"User registered successfully"})
        
     }catch(err){
@@ -85,7 +94,7 @@ export const login = async(req,res)=>{
         })
 
         if(!user){
-           return res.status(404).json({message:"user does not exist"})
+            res.status(404).json({message:"user does not exist"})
         }
 
         const isMatch = await bcrypt.compare(password,user.password)
@@ -101,7 +110,7 @@ export const login = async(req,res)=>{
         return res.json({ token:token })
         
     }catch(err){
-       return res.status(500).json({message:err.message})
+        res.status(500).json({message:err.message})
     }
 }
 
@@ -118,6 +127,9 @@ export const uploadProfilePicture = async(req,res)=>{
         user.profilePicture = req.file.filename //suppose img orginal name is "mypic.jpg", in req.file it's filename is "167873452_mypic.jpg" so this filename is stored in db not original name becos multiple user with diff img can upload diff img with same name filename kind of hashes it
 
         await user.save()
+
+        await invalidateUserProfile(token)
+        await invalidateAllUsers()
 
         return res.json({message:"Profile picture updated"})
 
@@ -155,6 +167,9 @@ export const updateUserProfile = async(req,res)=>{
 
         await user.save()
 
+        await invalidateUserProfile(token)
+        await invalidateAllUsers()
+
         return res.json({message:"user is updated"})
 
     }catch(err){
@@ -164,12 +179,30 @@ export const updateUserProfile = async(req,res)=>{
 
 export const getUserAndProfile =  async(req,res)=>{
     try{
-        const {token} = req.query // for get req in frontend
+        const {token} = req.query
 
-        const user=await User.findOne({token:token}) //this is foriegn key example undertsand this properly
+        if(!token){
+            return res.status(400).json({message:"token is required"})
+        }
 
-        const userProfile = await Profile.findOne({userId:user._id}).populate('userId','name email username profilePicture')
-        //“Take the userId field Go to the User collection Find the user whose _id equals this userId Replace userId with that user’s data But include ONLY these fields: name, email, username, profilePicture”
+        const cacheKey = CACHE_KEYS.userProfile(token)
+        const cachedProfile = await getCached(cacheKey)
+
+        if(cachedProfile){
+            return res.json({userProfile: cachedProfile})
+        }
+
+        const user = await User.findOne({token:token})
+
+        if(!user){
+            return res.status(404).json({message:"user does not exist"})
+        }
+
+        const userProfile = await Profile.findOne({userId:user._id})
+            .populate('userId','name email username profilePicture')
+            .lean()
+
+        await setCached(cacheKey, userProfile)
 
         return res.json({userProfile})
 
@@ -195,6 +228,9 @@ export const updateProfileData = async(req,res)=>{
 
             await profile_to_update.save()
 
+            await invalidateUserProfile(token)
+            await invalidateAllUsers()
+
             return res.json({message:"Profile updated"})
 
             //in this code first all info is copied in newProfileData except token with help of token then check if userProfile exists or not then profile_to_update find id in which matches with user._id from User db and with Object.assign(profile_to_update,newProfileData) we merge changed data and save in Profile db
@@ -206,11 +242,20 @@ export const updateProfileData = async(req,res)=>{
 
 export const getAllUserProfile = async(req,res)=>{
     try{
-        const profile = await Profile.find().populate('userId','name username email profilePicture')
+        const cacheKey = CACHE_KEYS.allUsers
+        const cachedProfiles = await getCached(cacheKey)
+
+        if(cachedProfiles){
+            return res.json({profile: cachedProfiles})
+        }
+
+        const profile = await Profile.find()
+            .populate('userId','name username email profilePicture')
+            .lean()
+
+        await setCached(cacheKey, profile)
 
         return res.json({profile})
-
-        //.populate('userId','name username email profilePicture') here userId is foriegn key of User db's user._id so while displaying all info it will include name username email profilePicture from User db
 
 
     }catch(err){
@@ -272,6 +317,9 @@ export const userSendConnectionReq = async(req,res)=>{
 
         await request.save()
 
+        await invalidateConnectionCaches(token)
+        await invalidateConnectionCachesByUserIds([user._id, connectionUser._id])
+
         return res.json({message:"request sent"})
     }catch(err){
         return res.json({message:err.message})
@@ -284,6 +332,17 @@ export const getMyConnectionRequest = async(req,res)=>{ //req sent by me
     const{token} = req.query
 
     try{
+        if(!token){
+            return res.status(400).json({message:"token is required"})
+        }
+
+        const cacheKey = CACHE_KEYS.sentConnections(token)
+        const cachedConnections = await getCached(cacheKey)
+
+        if(cachedConnections){
+            return res.json({connect: cachedConnections})
+        }
+
         const user = await User.findOne({token:token})
 
         if(!user){
@@ -293,6 +352,8 @@ export const getMyConnectionRequest = async(req,res)=>{ //req sent by me
             .find({userId:user._id})
             .populate({ path: 'connectionId', select: 'name username email profilePicture' })
             .lean()
+
+        await setCached(cacheKey, connect)
 
         return res.json({connect})
 
@@ -306,6 +367,16 @@ export const whatAreMyConnections = async(req,res)=>{   //token → find user �
     const{token} = req.query
 
     try{
+        if(!token){
+            return res.status(400).json({message:"token is required"})
+        }
+
+        const cacheKey = CACHE_KEYS.receivedConnections(token)
+        const cachedConnections = await getCached(cacheKey)
+
+        if(cachedConnections){
+            return res.json(cachedConnections)
+        }
 
         const user = await User.findOne({token:token})
 
@@ -313,7 +384,12 @@ export const whatAreMyConnections = async(req,res)=>{   //token → find user �
             return res.status(404).json({message:"user does not exist"})
         }
 
-        const connects =  await connection.find({connectionId:user._id}).populate('userId','name username email profilePicture')
+        const connects = await connection
+            .find({connectionId:user._id})
+            .populate('userId','name username email profilePicture')
+            .lean()
+
+        await setCached(cacheKey, connects)
 
         return res.json(connects)
 
@@ -346,6 +422,9 @@ export const acceptConnection =  async(req,res)=>{
         }
 
         await connect.save()
+
+        await invalidateConnectionCaches(token)
+        await invalidateConnectionCachesByUserIds([connect.userId, connect.connectionId])
 
         return res.json({message:"req updated"})
 
