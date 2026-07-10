@@ -1,6 +1,9 @@
 import { Router } from "express";
 import { acceptConnection, downloadUserProfile, getAllUserProfile, getMyConnectionRequest, getProfileBasedOnUsername, getUserAndProfile, login, register, updateProfileData, updateUserProfile, uploadProfilePicture, userSendConnectionReq, whatAreMyConnections } from "../controllers/user.controller.js";
 import multer from 'multer'
+import { authLimiter } from "../middleware/rateLimiter.js";
+import { apiLimiter } from "../middleware/rateLimiter.js";
+
 
 const router = Router()
 
@@ -23,23 +26,23 @@ router.post('/update_profile_picture',
 
 
 
-router.post("/register", register);
-router.post("/login",login)
+router.post("/register",authLimiter, register);
+router.post("/login",authLimiter,login)
 
-router.post('/user_update',updateUserProfile)
-router.get('/get_user_and_profile',getUserAndProfile)
+router.post('/user_update',apiLimiter,updateUserProfile)
+router.get('/get_user_and_profile',apiLimiter,getUserAndProfile)
 
-router.post("/update_profile_data",updateProfileData)
+router.post("/update_profile_data",apiLimiter,updateProfileData)
 
-router.get('/user/get_all_user',getAllUserProfile)
+router.get('/user/get_all_user',apiLimiter,getAllUserProfile)
 
-router.get("/user/download_resume",downloadUserProfile)
+router.get("/user/download_resume",apiLimiter,downloadUserProfile)
 
-router.post("/user/send_connection_request",userSendConnectionReq)
+router.post("/user/send_connection_request",apiLimiter,userSendConnectionReq)
 router.get("/user/getConnectionRequest",getMyConnectionRequest)
 router.get("/user/user_connection_request",whatAreMyConnections)
-router.post("/user/acceptConnectionRequest",acceptConnection)      
+router.post("/user/acceptConnectionRequest",apiLimiter,acceptConnection)      
 
-router.get("/user/get_profile_based_on_username",getProfileBasedOnUsername)
+router.get("/user/get_profile_based_on_username",apiLimiter,getProfileBasedOnUsername)
 
 export default router;
