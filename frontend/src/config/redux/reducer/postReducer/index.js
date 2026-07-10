@@ -5,6 +5,9 @@ import { createPost, getAllComments, getAllPosts } from "../../action/postAction
 
 const initialState = {  // don't worry about initial state as u will develop this skill with time
     posts: [],
+    currentPage: 1,
+    totalPages: 1,
+    totalPosts: 0,
     isError: false,
     postFetched: false,
     isLoading: false,
@@ -38,11 +41,14 @@ const postSlice = createSlice({
                     state.message = "All posts visible"
                     state.isLoading = false
                     state.postFetched = true
-                    state.posts = action.payload.post.reverse()  //It stores the API response data into Redux state so the UI can use it.
+                    state.posts = action.payload.posts  //It stores the API response data into Redux state so the UI can use it.
+                    state.currentPage = action.payload.currentPage;
+                    state.totalPages = action.payload.totalPages;
+                    state.totalPosts = action.payload.totalPosts;
                 })
                 .addCase(getAllPosts.rejected,(state,action)=>{
                     state.isError = true
-                    state.message = action.payload // tells the error
+                    state.message =action.payload?.message || action.payload || "Something went wrong"; // tells the error
                     state.isLoading = false
                 })
                 .addCase(createPost.pending,(state) =>{

@@ -56,9 +56,27 @@ export const getAllPost = async(req,res)=>{
     
 
     try{
-        const post = await Post.find().populate('userId','name username email profilePicture')
+        let { page = 1, limit = 10 } = req.query;
 
-        return res.json({post})
+        page = parseInt(page);
+        limit = parseInt(limit);
+
+        const skip = (page - 1) * limit;
+
+        const totalPosts = await Post.countDocuments();
+
+        const posts = await Post.find()
+            .populate("userId", "name username email profilePicture")
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        return res.json({
+            currentPage: page,
+            totalPages: Math.ceil(totalPosts / limit),
+            totalPosts,
+            posts
+        });
 
         //this is home page where we see every users posts so no token req
     }catch(err){

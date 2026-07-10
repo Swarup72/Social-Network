@@ -5,10 +5,10 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 
 export const getAllPosts = createAsyncThunk(
     "/post/getAllPost",
-    async( _, thunkAPI)=>{
+    async( { page = 1, limit = 10 }, thunkAPI)=>{
         try{
             
-            const response = await clientServer.get("/all_posts")  // this is from backend routes section
+            const response = await clientServer.get(`/all_posts?page=${page}&limit=${limit}`)  // this is from backend routes section
 
             return thunkAPI.fulfillWithValue(response.data)
 
