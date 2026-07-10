@@ -4,7 +4,8 @@ import redisClient from "../config/redis.js"; // Import your existing Redis clie
 
 export const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 min
-    max: 5,
+    max: 20,
+    skipSuccessfulRequests: true,
     standardHeaders: true,   //This tells Express: "Send the new standard rate-limit headers."
     legacyHeaders: false,   //By writing: legacyHeaders: false you tell Express: "Don't send these old-style headers." So your response only contains the newer standard ones.
 

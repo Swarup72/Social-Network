@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit"
 import { getAboutUser, getAllUsers, getConnectionsRequest, getMyConnectionRequest, loginUser, registerUser } from "../../action/authAction"
+import { getErrorMessage } from "@/utils/getErrorMessage"
 
 const initialState = {  // don't worry about initial state as u will develop this skill with time
     user: [],
@@ -47,7 +48,7 @@ const authSlice = createSlice({
         .addCase(loginUser.rejected, (state, action) => {
             state.isLoading = false
             state.isError = true
-            state.message = action.payload || "Login Failed"
+            state.message = getErrorMessage(action.payload, "Login Failed")
         })
         .addCase(registerUser.pending, (state) => {
             state.isLoading = true
@@ -62,7 +63,7 @@ const authSlice = createSlice({
         .addCase(registerUser.rejected, (state, action) => {
             state.isLoading = false
             state.isError = true
-            state.message = action.payload || "Registration Failed"  // tells the error
+            state.message = getErrorMessage(action.payload, "Registration Failed")
         })
         .addCase(getAboutUser.fulfilled,(state,action)=>{
              state.isLoading = false
@@ -84,13 +85,13 @@ const authSlice = createSlice({
             state.connections = action.payload
         })
         .addCase(getConnectionsRequest.rejected,(state,action) =>{
-            state.message = action.payload
+            state.message = getErrorMessage(action.payload)
         })
         .addCase(getMyConnectionRequest.fulfilled,(state,action)=>{
             state.connectionRequest = action.payload
         })
         .addCase(getMyConnectionRequest.rejected,(state,action) =>{
-            state.message = action.payload
+            state.message = getErrorMessage(action.payload)
         })
     }
 })

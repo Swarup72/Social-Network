@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import styles from './index.module.css'
 import { useRouter } from 'next/router'
-import { setTokenisThere } from '@/config/redux/reducer/authReducer'
+import { setTokenisNotThere, setTokenisThere } from '@/config/redux/reducer/authReducer'
 import { useDispatch, useSelector } from 'react-redux'
 import { BASE_URL } from '@/config'
+import { validateStoredToken } from '@/utils/auth'
 
 const NAV_ITEMS = [
   {
@@ -39,15 +40,37 @@ export default function DashboardLayout({ children }) {
   const router = useRouter()
   const dispatch = useDispatch()
   const authState = useSelector((state) => state.auth)
+  const [isAuthorized, setIsAuthorized] = useState(false)
 
   useEffect(() => {
-    if (localStorage.getItem("token") === null) {
+    let cancelled = false
+
+    const checkAuth = async () => {
+      const isValid = await validateStoredToken()
+      if (cancelled) return
+
+      if (isValid) {
+        dispatch(setTokenisThere())
+        setIsAuthorized(true)
+        return
+      }
+
+      dispatch(setTokenisNotThere())
       router.push("/login")
     }
-    dispatch(setTokenisThere())
-  }, [])
+
+    checkAuth()
+
+    return () => {
+      cancelled = true
+    }
+  }, [dispatch, router])
 
   const isActive = (path) => router.pathname === path
+
+  if (!isAuthorized) {
+    return null
+  }
 
   return (
     <div className={styles.pageWrapper}>

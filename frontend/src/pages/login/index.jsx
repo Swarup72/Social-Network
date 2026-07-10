@@ -5,11 +5,13 @@ import { useDispatch, useSelector } from 'react-redux'
 import styles from './style.module.css'
 import { loginUser, registerUser } from '@/config/redux/action/authAction'
 import { emptyMessage } from '@/config/redux/reducer/authReducer'
+import { validateStoredToken } from '@/utils/auth'
 
 export default function LoginComponent() {
   const autState = useSelector((state) => state.auth)
   const router = useRouter()
   const [loggedinMethod, setUserLoginMethod] = useState(false)
+  const [isCheckingSession, setIsCheckingSession] = useState(true)
   const dispatch = useDispatch()
 
   const [username, setUsername] = useState("")
@@ -18,16 +20,37 @@ export default function LoginComponent() {
   const [name, setName] = useState("")
 
   useEffect(() => {
-    if (autState.loggedIn) {
-      router.push("/dashboard")
+    if (router.query.mode === "signin") {
+      setUserLoginMethod(true)
     }
-  }, [autState.loggedIn])
+  }, [router.query.mode])
 
   useEffect(() => {
-    if (localStorage.getItem("token")) {
+    if (autState.loggedIn) {
       router.push("/dashboard")
+      return
     }
-  })
+
+    let cancelled = false
+
+    const checkExistingSession = async () => {
+      const isValid = await validateStoredToken()
+      if (cancelled) return
+
+      if (isValid) {
+        router.push("/dashboard")
+        return
+      }
+
+      setIsCheckingSession(false)
+    }
+
+    checkExistingSession()
+
+    return () => {
+      cancelled = true
+    }
+  }, [autState.loggedIn, router])
 
   useEffect(() => {
     dispatch(emptyMessage())
@@ -48,6 +71,14 @@ export default function LoginComponent() {
     } else {
       handleRegister()
     }
+  }
+
+  if (isCheckingSession) {
+    return (
+      <UserLayout>
+        <div className={styles.page} />
+      </UserLayout>
+    )
   }
 
   return (

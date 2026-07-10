@@ -22,7 +22,9 @@ export const loginUser = createAsyncThunk(
            
 
         }catch(err){
-            return thunkAPI.rejectWithValue(err.response.data)
+            return thunkAPI.rejectWithValue(
+                err.response?.data || { message: "Unable to reach server. Is the backend running?" }
+            )
         }
     }
 )
@@ -41,7 +43,9 @@ export const registerUser = createAsyncThunk(
             })
 
         }catch(err){
-            return thunkAPI.rejectWithValue(err.response.data)
+            return thunkAPI.rejectWithValue(
+                err.response?.data || { message: "Unable to reach server. Is the backend running?" }
+            )
         }
     }
 )
@@ -61,7 +65,9 @@ export const getAboutUser = createAsyncThunk(
                         return thunkAPI.fulfillWithValue(response.data)
 
         }catch(err){
-            return thunkAPI.rejectWithValue(err.response.data)
+            return thunkAPI.rejectWithValue(
+                err.response?.data || { message: "Unable to reach server. Is the backend running?" }
+            )
         }
     }
 )
@@ -78,7 +84,9 @@ export const getAllUsers = createAsyncThunk(
             return thunkAPI.fulfillWithValue(response.data)
 
         }catch(err){
-            return thunkAPI.rejectWithValue(err.response.data)
+            return thunkAPI.rejectWithValue(
+                err.response?.data || { message: "Unable to reach server. Is the backend running?" }
+            )
         }
     }
 )
@@ -98,7 +106,9 @@ export const sendConnectionRequest = createAsyncThunk(
             return thunkAPI.fulfillWithValue(response.data)
 
         }catch(err){
-            return thunkAPI.rejectWithValue(err.response.data)
+            return thunkAPI.rejectWithValue(
+                err.response?.data || { message: "Unable to reach server. Is the backend running?" }
+            )
         }
     }
 )
@@ -118,7 +128,9 @@ export const getConnectionsRequest = createAsyncThunk(
              return thunkAPI.fulfillWithValue(response.data.connect) //this might be connections
 
         }catch(err){
-            return thunkAPI.rejectWithValue(err.response.data)
+            return thunkAPI.rejectWithValue(
+                err.response?.data || { message: "Unable to reach server. Is the backend running?" }
+            )
         }
     }
 )
@@ -138,7 +150,9 @@ export const getMyConnectionRequest = createAsyncThunk(
             return thunkAPI.fulfillWithValue(response.data)
 
         }catch(err){
-            return thunkAPI.rejectWithValue(err.response.data)
+            return thunkAPI.rejectWithValue(
+                err.response?.data || { message: "Unable to reach server. Is the backend running?" }
+            )
         }
     }
 )

@@ -3,3 +3,12 @@ Redis implementation
 1. in Backend: npm i redis
 
 2. redis.js -> cache.js -> cachevalidation.js -> then used in api's like getUserAndProfile, updateProfileData, getAllUserProfile, userSendConnectionReq, getMyConnectionRequest, whatAreMyConnections, acceptConnection, 
+
+
+Rate limiting 
+
+1. in backend: npm install express-rate-limit rate-limit-redis
+
+2. middleware rateLimiter.js 
+
+3. in routes implement it by importing function and then add it in route eg : router.post("/comment",commentLimiter,commentPost)

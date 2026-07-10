@@ -28,7 +28,7 @@ export default function Home() {
               <button
                 type="button"
                 className={styles.btnSecondary}
-                onClick={() => router.push("/login")}
+                onClick={() => router.push("/login?mode=signin")}
               >
                 Sign in
               </button>
