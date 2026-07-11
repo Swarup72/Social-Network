@@ -5,6 +5,8 @@ Redis implementation
 2. redis.js -> cache.js -> cachevalidation.js -> then used in api's like getUserAndProfile, updateProfileData, getAllUserProfile, userSendConnectionReq, getMyConnectionRequest, whatAreMyConnections, acceptConnection, 
 
 
+3. to start website in terminal run : docker run -d --name redis -p 6379:6379 redis
+
 Rate limiting 
 
 1. in backend: npm install express-rate-limit rate-limit-redis
